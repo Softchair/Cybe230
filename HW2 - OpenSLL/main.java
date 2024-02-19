@@ -1,6 +1,7 @@
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -47,14 +48,17 @@ public class main {
 
         //Value to store the current hash
         String curHash = "";
+        String curHash1 = "";
+        String tempSalt = "xgLS35S6";
         //Value to store current password
         //String curPassword = scan.nextLine();
         String curPassword = "password";
         while(scan.hasNext()) {
 
-            String saltedPassword = user.saltValue + curPassword;
+            String saltedPassword = tempSalt + curPassword;
 
             try {
+                //First way
                 MessageDigest md = MessageDigest.getInstance("SHA-512");
 
                 byte[] hash = md.digest(saltedPassword.getBytes(StandardCharsets.UTF_8));
@@ -65,6 +69,16 @@ public class main {
                 }
 
                 curHash = sb.toString();
+
+                //Second test way
+                MessageDigest md1 = MessageDigest.getInstance("SHA-512");
+                md1.update(tempSalt.getBytes(StandardCharsets.UTF_8));
+                byte[] bytes = md1.digest(curPassword.getBytes(StandardCharsets.UTF_8));
+                StringBuilder sb1 = new StringBuilder();
+                for (int i = 0; i < bytes.length; i++) {
+                    sb1.append(Integer.toString((bytes[i] & 0xff) + 0x100, 16).substring(1));
+                }
+                curHash1 = sb1.toString();
             } catch (NoSuchAlgorithmException e) {
                 throw new RuntimeException();
             }
