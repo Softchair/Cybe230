@@ -8,6 +8,7 @@ public class UserAccount {
 
     public String encrpytionType;
     public String saltValue;
+    public String password;
 
     // Constructor
     public UserAccount(String username, String hash, int lastChanged,
@@ -18,6 +19,7 @@ public class UserAccount {
         this.minPasswordDate = minPasswordDate;
         this.maxPasswordDate = maxPasswordDate;
         this.warn = warn;
+        this.password = "this isnt working";
     }
 
     public UserAccount(){}
@@ -34,5 +36,10 @@ public class UserAccount {
         };
 
         this.hash = hash.substring(hashValue.length());
+    }
+
+    public void setSaltValue(String saltValue) {
+        this.saltValue = saltValue;
+        this.hash = hash.substring(saltValue.length() + 1);
     }
 }

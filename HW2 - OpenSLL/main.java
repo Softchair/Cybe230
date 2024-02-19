@@ -1,8 +1,10 @@
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.Scanner;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public class main {
 
@@ -22,13 +24,73 @@ public class main {
         user = getUserObject(shadowHash);
 
         //Determine hashing type
-        user.setEncrpytionType(getHashValue(user.hash));
-        user.saltValue = getSaltValue(user.hash);
+        getHashValue(user.hash);
+        //Get the salting value
+        getSaltValue(user.hash);
+        //Cracking password
+        crackPassword(user.hash, passwordList);
 
 
+
+        //Print out finals stats
+        printStats(user);
     }
 
-    public static String getSaltValue(String hashValue) {
+    public static void printStats(UserAccount user) {
+        System.out.println("Hash value: " + user.hash);
+        System.out.println("Salt value: " + user.saltValue);
+        System.out.println("Password: " + user.password);
+    }
+
+    public static void crackPassword(String passHash, File passwordList) throws FileNotFoundException {
+        Scanner scan = new Scanner(passwordList);
+
+        //Value to store the current hash
+        String curHash = "";
+        //Value to store current password
+        //String curPassword = scan.nextLine();
+        String curPassword = "password";
+        while(scan.hasNext()) {
+
+            String saltedPassword = user.saltValue + curPassword;
+
+            try {
+                MessageDigest md = MessageDigest.getInstance("SHA-512");
+
+                byte[] hash = md.digest(saltedPassword.getBytes(StandardCharsets.UTF_8));
+
+                StringBuilder sb = new StringBuilder();
+                for (byte b : hash) {
+                    sb.append(String.format("%02x", b));
+                }
+
+                curHash = sb.toString();
+            } catch (NoSuchAlgorithmException e) {
+                throw new RuntimeException();
+            }
+
+            if (curHash.equals(user.hash)) {
+                user.password = curPassword;
+                return;
+            }
+
+            curPassword = scan.nextLine();
+        }
+
+        //user.password = "WHY";
+    }
+
+    public static byte[] hexStringToByteArray(String s) {
+        int len = s.length();
+        byte[] data = new byte[len /  2];
+        for (int i =  0; i < len; i +=  2) {
+            data[i /  2] = (byte) ((Character.digit(s.charAt(i),  16) <<  4)
+                    + Character.digit(s.charAt(i+1),  16));
+        }
+        return data;
+    }
+
+    public static void getSaltValue(String hashValue) {
         //Define return value
         String saltValue = "Error";
         //Starting point of salt
@@ -44,7 +106,7 @@ public class main {
 
             //Return if error
             if (curPoint - 1 >= hashValue.length()) {
-                return saltValue;
+                break;
             }
         }
 
@@ -54,7 +116,7 @@ public class main {
         //Find salt value and set the return
         saltValue = hashValue.substring(startPoint, endPoint);
 
-        return saltValue;
+        user.setSaltValue(saltValue);
     }
 
     public static UserAccount getUserObject(String shadowString) {
@@ -76,7 +138,7 @@ public class main {
         return user;
     }
 
-    public static String getHashValue(String passHash) {
+    public static void getHashValue(String passHash) {
         //Get hashing type
         String shadowHash = passHash.substring(0, 3);
 
@@ -86,7 +148,6 @@ public class main {
         }
 
         //Return set hash type
-        return shadowHash;
+        user.setEncrpytionType(shadowHash);
     }
 }
-
