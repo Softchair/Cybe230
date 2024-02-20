@@ -1,11 +1,13 @@
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.security.Security;
+import java.util.ArrayList;
 import java.util.Scanner;
+import java.util.Set;
 
 public class main {
 
@@ -48,50 +50,43 @@ public class main {
 
         //Value to store the current hash
         String curHash = "";
-        String curHash1 = "";
         String tempSalt = "xgLS35S6";
         //Value to store current password
         //String curPassword = scan.nextLine();
         String curPassword = "password";
         while(scan.hasNext()) {
 
-            String saltedPassword = tempSalt + curPassword;
+            String saltedPassword = "$6$" + tempSalt + curPassword;
+            byte[] toHash = saltedPassword.getBytes();
 
             try {
-                //First way
+                //Create new hashing variable
                 MessageDigest md = MessageDigest.getInstance("SHA-512");
 
-                byte[] hash = md.digest(saltedPassword.getBytes(StandardCharsets.UTF_8));
+                //Update
+                md.update(toHash);
+                byte[] hash = md.digest();
 
+                //Convert the byte to a string
                 StringBuilder sb = new StringBuilder();
                 for (byte b : hash) {
                     sb.append(String.format("%02x", b));
                 }
 
                 curHash = sb.toString();
-
-                //Second test way
-                MessageDigest md1 = MessageDigest.getInstance("SHA-512");
-                md1.update(tempSalt.getBytes(StandardCharsets.UTF_8));
-                byte[] bytes = md1.digest(curPassword.getBytes(StandardCharsets.UTF_8));
-                StringBuilder sb1 = new StringBuilder();
-                for (int i = 0; i < bytes.length; i++) {
-                    sb1.append(Integer.toString((bytes[i] & 0xff) + 0x100, 16).substring(1));
-                }
-                curHash1 = sb1.toString();
             } catch (NoSuchAlgorithmException e) {
                 throw new RuntimeException();
             }
 
+            //Checking if the hashes are the same
             if (curHash.equals(user.hash)) {
                 user.password = curPassword;
                 return;
             }
 
+            //Set new password
             curPassword = scan.nextLine();
         }
-
-        //user.password = "WHY";
     }
 
     public static byte[] hexStringToByteArray(String s) {
